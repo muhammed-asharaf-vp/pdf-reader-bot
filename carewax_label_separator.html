@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Carewax Label Separator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0efeb;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    }
+
+    h1 { font-size: 20px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+    .subtitle { font-size: 13px; color: #888; margin-bottom: 1.5rem; }
+
+    #dz {
+      border: 2px dashed #ccc;
+      border-radius: 12px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      background: #fafaf8;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    #dz:hover { border-color: #999; background: #f3f3ef; }
+    #dz.hov   { border-color: #555; background: #eeeeea; }
+
+    .upload-icon {
+      width: 52px; height: 52px;
+      border: 1.5px solid #ddd;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    .dz-title { font-size: 16px; font-weight: 600; color: #1a1a1a; margin-bottom: 6px; }
+    .dz-sub   { font-size: 13px; color: #999; margin-bottom: 16px; }
+
+    .tags { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 18px; }
+    .tag  { font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+    .tag-blue  { background: #dbeafe; color: #1d4ed8; }
+    .tag-green { background: #dcfce7; color: #166534; }
+    .tag-amber { background: #fef3c7; color: #92400e; }
+
+    .browse-btn {
+      display: inline-block;
+      padding: 9px 22px;
+      border: 1.5px solid #ccc;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #333;
+      background: white;
+      cursor: pointer;
+    }
+
+    #step-proc { display: none; text-align: center; padding: 3rem 0; }
+
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid #eee;
+      border-top-color: #555;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #pmsg { font-size: 14px; color: #777; }
+
+    #step-results { display: none; }
+
+    .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .results-title  { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+
+    .reset-btn {
+      font-size: 12px; padding: 5px 14px;
+      border: 1px solid #ddd; border-radius: 8px;
+      background: white; cursor: pointer; color: #555;
+    }
+    .reset-btn:hover { background: #f5f5f0; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 18px; }
+    .stat-box  { background: #f5f5f0; border-radius: 10px; padding: 14px 10px; text-align: center; }
+    .stat-label { font-size: 11px; color: #999; margin-bottom: 4px; }
+    .stat-num   { font-size: 26px; font-weight: 700; color: #1a1a1a; }
+    .stat-unit  { font-size: 11px; color: #bbb; margin-top: 2px; }
+
+    .prod-card {
+      border: 1.5px solid #eee; border-radius: 12px;
+      padding: 14px 16px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .prod-dot  { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .prod-info { flex: 1; min-width: 0; }
+    .prod-name { font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 3px; }
+    .prod-sub  { font-size: 12px; color: #aaa; }
+
+    .dl-btn {
+      display: inline-block; padding: 8px 18px;
+      border: 1.5px solid #ccc; border-radius: 8px;
+      font-size: 12px; font-weight: 500; color: #333;
+      text-decoration: none; white-space: nowrap;
+      background: white; flex-shrink: 0;
+    }
+    .dl-btn:hover { background: #f5f5f0; border-color: #aaa; }
+
+    #err-box {
+      display: none;
+      background: #fef2f2; border: 1px solid #fca5a5;
+      border-radius: 8px; padding: 10px 14px;
+      margin-top: 12px; font-size: 13px; color: #b91c1c;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Carewax Label Separator</h1>
+  <p class="subtitle">Mixed shipping label PDF &rarr; 3 separate product PDFs</p>
+
+  <!-- Step 1: Upload -->
+  <div id="step-upload">
+    <div id="dz" onclick="document.getElementById('fi').click()">
+      <div class="upload-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#888"
+          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14,2 14,8 20,8"/>
+          <line x1="12" y1="18" x2="12" y2="12"/>
+          <polyline points="9,15 12,12 15,15"/>
+        </svg>
+      </div>
+      <p class="dz-title">PDF ഇവിടെ upload ചെയ്യൂ</p>
+      <p class="dz-sub">Drag &amp; drop or click to browse</p>
+      <div class="tags">
+        <span class="tag tag-blue">HD Plastic Restoration</span>
+        <span class="tag tag-green">Interior Cleaner</span>
+        <span class="tag tag-amber">Dust Remover</span>
+      </div>
+      <span class="browse-btn">Browse File</span>
+    </div>
+    <input type="file" id="fi" accept=".pdf" style="display:none">
+  </div>
+
+  <!-- Step 2: Processing -->
+  <div id="step-proc">
+    <div class="spinner"></div>
+    <p id="pmsg">Processing...</p>
+  </div>
+
+  <!-- Step 3: Results -->
+  <div id="step-results">
+    <div class="results-header">
+      <span class="results-title" id="rsummary"></span>
+      <button class="reset-btn" onclick="resetApp()">&#8592; New PDF</button>
+    </div>
+    <div class="stats-row" id="stats-row"></div>
+    <div id="cards"></div>
+  </div>
+
+  <div id="err-box"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+var PRODUCTS = [
+  { key:'plastic', label:'HD Plastic Restoration',
+    detect: function(t){ return t.toLowerCase().indexOf('plastic restoration') !== -1; },
+    color:'#1d4ed8', filename:'HD_Plastic_Restoration.pdf' },
+  { key:'interior', label:'Interior Cleaner',
+    detect: function(t){ return t.toLowerCase().indexOf('interior cleaner') !== -1; },
+    color:'#166534', filename:'Interior_Cleaner.pdf' },
+  { key:'dust', label:'Dust Remover',
+    detect: function(t){ return t.toLowerCase().indexOf('dust remover') !== -1; },
+    color:'#92400e', filename:'Dust_Remover.pdf' }
+];
+
+var dz = document.getElementById('dz');
+dz.addEventListener('dragover',  function(e){ e.preventDefault(); dz.classList.add('hov'); });
+dz.addEventListener('dragleave', function(){ dz.classList.remove('hov'); });
+dz.addEventListener('drop', function(e){
+  e.preventDefault(); dz.classList.remove('hov');
+  if(e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+});
+document.getElementById('fi').addEventListener('change', function(e){
+  if(e.target.files[0]) processFile(e.target.files[0]);
+});
+
+function showStep(id){
+  document.getElementById('step-upload').style.display  = id==='step-upload'  ? 'block' : 'none';
+  document.getElementById('step-proc').style.display    = id==='step-proc'    ? 'block' : 'none';
+  document.getElementById('step-results').style.display = id==='step-results' ? 'block' : 'none';
+}
+
+function setMsg(t){ document.getElementById('pmsg').textContent = t; }
+
+function showError(t){
+  var box = document.getElementById('err-box');
+  box.textContent = t; box.style.display = 'block';
+  setTimeout(function(){ box.style.display='none'; }, 6000);
+}
+
+async function processFile(file){
+  if(!file.name.toLowerCase().endsWith('.pdf')){ showError('PDF file മാത്രം upload ചെയ്യൂ!'); return; }
+  document.getElementById('err-box').style.display = 'none';
+  showStep('step-proc');
+
+  try {
+    var buf = await file.arrayBuffer();
+
+    setMsg('Pages analyze ചെയ്യുന്നു...');
+    var pdfJs = await pdfjsLib.getDocument({ data: buf.slice(0) }).promise;
+    var total = pdfJs.numPages;
+    var groups = { plastic:[], interior:[], dust:[] };
+    var unmatched = 0;
+
+    for(var i=1; i<=total; i++){
+      var page    = await pdfJs.getPage(i);
+      var content = await page.getTextContent();
+      var text    = content.items.map(function(it){ return it.str; }).join(' ');
+      var matched = false;
+      for(var j=0; j<PRODUCTS.length; j++){
+        if(PRODUCTS[j].detect(text)){
+          groups[PRODUCTS[j].key].push(i-1);
+          matched = true; break;
+        }
+      }
+      if(!matched) unmatched++;
+    }
+
+    setMsg('Separate PDFs generate ചെയ്യുന്നു...');
+    var srcDoc = await PDFLib.PDFDocument.load(buf);
+    var results = [];
+
+    for(var k=0; k<PRODUCTS.length; k++){
+      var p = PRODUCTS[k];
+      var indices = groups[p.key];
+      if(!indices.length) continue;
+
+      var newDoc = await PDFLib.PDFDocument.create();
+      var copied = await newDoc.copyPages(srcDoc, indices);
+      copied.forEach(function(pg){ newDoc.addPage(pg); });
+
+      var bytes = await newDoc.save();
+      var blob  = new Blob([bytes], { type:'application/pdf' });
+      var url   = URL.createObjectURL(blob);
+      results.push({ label:p.label, color:p.color, filename:p.filename, count:indices.length, url:url });
+    }
+
+    renderResults(results, total, unmatched);
+    showStep('step-results');
+
+  } catch(err){
+    showStep('step-upload');
+    showError('Error: ' + err.message);
+  }
+}
+
+function renderResults(results, total, unmatched){
+  document.getElementById('rsummary').textContent = total + ' pages — ' + results.length + ' products found';
+
+  document.getElementById('stats-row').innerHTML = results.map(function(r){
+    return '<div class="stat-box"><p class="stat-label">'+r.label+'</p><p class="stat-num">'+r.count+'</p><p class="stat-unit">labels</p></div>';
+  }).join('');
+
+  var html = results.map(function(r){
+    return '<div class="prod-card">'+
+      '<div class="prod-dot" style="background:'+r.color+'"></div>'+
+      '<div class="prod-info">'+
+        '<p class="prod-name">Carewax '+r.label+'</p>'+
+        '<p class="prod-sub">'+r.count+' labels — original barcode &amp; format preserved</p>'+
+      '</div>'+
+      '<a href="'+r.url+'" download="'+r.filename+'" class="dl-btn">Download PDF</a>'+
+    '</div>';
+  }).join('');
+
+  if(unmatched > 0) html += '<p style="font-size:12px;color:#bbb;margin-top:8px;">'+unmatched+' pages match ആകാനായില്ല</p>';
+  document.getElementById('cards').innerHTML = html;
+}
+
+function resetApp(){
+  document.getElementById('fi').value = '';
+  document.getElementById('cards').innerHTML = '';
+  document.getElementById('stats-row').innerHTML = '';
+  document.getElementById('err-box').style.display = 'none';
+  showStep('step-upload');
+}
+</script>
+</body>
+</html>
